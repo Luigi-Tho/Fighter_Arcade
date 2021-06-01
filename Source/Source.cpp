@@ -38,6 +38,7 @@ class Player
         {}
 
         attack.basic = attack.basic * level;
+        currenthealth = maxhealth;
     }
 };
 
@@ -52,7 +53,7 @@ class Enemy
 
     public:
     int maxhealth = 100 * (id + 1);
-    int currenthealth = 0;
+    int currenthealth = maxhealth;
 
     struct Attack
     {
@@ -68,7 +69,7 @@ class Enemy
         name = n;
         else if(n == "no change")
         {}
-
+        currenthealth = maxhealth;
     }
 
     void ResetHealth() { currenthealth = maxhealth; }
@@ -89,6 +90,7 @@ void  UserAttack()
 
     if (enemy.currenthealth > 0)
     {
+        player.outcome = -1;
         std::cout << "<player> vs <enemy>" << std::endl;
         std::cout << "Press the number that corresponds to the choice you want to make." << std::endl;
         std::cout << "_____________________________________________________";
@@ -142,6 +144,7 @@ void EnemyAttack()
     
     if (player.currenthealth > 0)
     {
+        player.outcome = -1;
         while (!done)
         {
             choice = rand() % 2;
@@ -172,7 +175,7 @@ void EnemyAttack()
        }
     }
     else if (player.currenthealth <= 0)
-    player.outcome = 0;
+    player.outcome = 0; std::cout << "You win!";
 }
 
 int main()
@@ -182,6 +185,8 @@ int main()
     
     player.currenthealth = player.maxhealth;
     enemy.currenthealth = enemy.maxhealth;
+
+    std::cout << "Hello world" << std::endl;
 
     do
     {
