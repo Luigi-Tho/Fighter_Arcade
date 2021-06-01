@@ -2,6 +2,7 @@
 #include <string>
 
 //TODO: Create formula for critical hit probability
+//TODO: Create formula for blocked attack damage
 
 
 /*All of the data for the player goes in here*/
@@ -11,11 +12,14 @@ class Player
     std::string name = "";
 
     public:
-    void Setname(std::string user) { name = user; };
-    const std::string& GetName() const { return name; };
+    void Setname(std::string user) { name = user; }
+    const std::string& GetName() const { return name; }
+
     int level = 1;
     int maxhealth = 1000;
     int currenthealth = 0;
+    
+    int outcome = -1; //-1 is default, 0 is lose, 1 is win
 
     /*All the attacks go in here*/
     struct Attack
@@ -28,8 +32,11 @@ class Player
     {
         Attack attack;
 
+        if (n != "no change")
         name = n;
-        currenthealth = maxhealth;
+        else if (n == "no change")
+        {}
+
         attack.basic = attack.basic * level;
     }
 };
@@ -42,9 +49,9 @@ class Enemy
     private:
     std::string name = "";
     int id = 0;
-    int maxhealth = 100 * (id + 1);
 
     public:
+    int maxhealth = 100 * (id + 1);
     int currenthealth = 0;
 
     struct Attack
@@ -57,8 +64,11 @@ class Enemy
     {
         Attack attack;
         
+        if (n != "no change")
         name = n;
-        currenthealth = maxhealth;
+        else if(n == "no change")
+        {}
+
     }
 
     void ResetHealth() { currenthealth = maxhealth; }
@@ -67,10 +77,10 @@ class Enemy
     const std::string& GetName() const { return name; }
 };
 
-void  UserAttack(std::string u, std::string e)
+void  UserAttack()
 {
-    Enemy enemy = Enemy(e);
-    Player player = Player(u);
+    Enemy enemy = Enemy("no change");
+    Player player = Player("no change");
     Player::Attack pa;
     Enemy::Attack ea;
 
@@ -93,22 +103,92 @@ void  UserAttack(std::string u, std::string e)
                 case 1:
                     if (!ea.block)
                     {
-                        std::cout << "Player chose to attack" << std::endl;
+                        std::cout << "Player chose to attack." << std::endl;
                         std::cout << "Player dealt " + std::to_string(pa.basic) + " damage." << std::endl;
+                        enemy.currenthealth -= pa.basic;
+                        std::cout << "Enemy now has " + std::to_string(enemy.currenthealth) + " health." << std::endl;
                         std::cin.ignore();
                     }
+                    else if (ea.block)
+                    {
+                        std::cout << "Player has chosen to attack, but enemy chose to block on their previous turn!" << std::endl;
+                        std::cout << "Player dealt " + std::to_string(pa.basic / 2) + " damage." << std::endl;
+                        enemy.currenthealth -= (pa.basic / 2);
+                         std::cout << "Enemy now has " + std::to_string(enemy.currenthealth) + " health." << std::endl;
+                         std::cin.ignore();
+                    }
                     done = true; break;
-                case 2: pa.block = true; std::cin.ignore(); done = true; break;
-                default: "Please choose a response: "; std::cin.ignore();
+                case 2:
+                    std::cout << "Player chose to block." << std::endl;
+                    pa.block = true; std::cin.ignore(); done = true; break;
+                default: "Please choose a response: "; std::cin.ignore(); break;
             }
         }
     }
-    else if (enemy.currenthealth <= 0);
+    else if (enemy.currenthealth <= 0)
+    player.outcome = 1;
+}
+
+void EnemyAttack()
+{
+    Enemy enemy = Enemy("no change");
+    Player player = Player("no change");
+    Player::Attack pa;
+    Enemy::Attack ea;
+
+    int choice; // attack is 0, block is 1.
+    bool done = false;
+
+    
+    if (player.currenthealth > 0)
+    {
+        while (!done)
+        {
+            choice = rand() % 2;
+            switch(choice)
+            {
+                case 0:
+                if (!pa.block)
+                {
+                    std::cout << "Enemy chose to attack." << std::endl;
+                    std::cout << "Enemy dealt " + std::to_string(ea.basic) + " damage." << std::endl;
+                    player.currenthealth -= ea.basic;
+                    std::cout << "Player now has " + std::to_string(player.currenthealth) + " health." << std::endl;
+                    std::cin.ignore();
+                }
+                else if (pa.block)
+                {
+                    std::cout << "Enemy chose to attack, but player has chosen to block on their previous turn!" << std::endl;
+                    std::cout << "Enemy dealt " + std::to_string(ea.basic / 2) + " damage." << std::endl;
+                    player.currenthealth -= ea.basic;
+                    std::cout << "Player now has " + std::to_string(player.currenthealth) + " health." << std::endl;
+                    std::cin.ignore();
+                }
+                done = true; break;
+                case 1:
+                    pa.block = true; done = true; break;
+               default: std::cout << "Error: number outside of scope."; break;
+            }
+       }
+    }
+    else if (player.currenthealth <= 0)
+    player.outcome = 0;
 }
 
 int main()
 {
-    UserAttack("u", "e");
+    Player player = Player("no change");
+    Enemy enemy = Enemy("no change");
+    
+    player.currenthealth = player.maxhealth;
+    enemy.currenthealth = enemy.maxhealth;
+
+    do
+    {
+        UserAttack();
+        EnemyAttack();
+    } while (player.outcome == -1);
+    
     std::cout << "Hello World" << std::endl;
     std::cin.ignore();
 }
